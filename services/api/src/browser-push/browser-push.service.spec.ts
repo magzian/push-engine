@@ -3,6 +3,31 @@ import test from "node:test";
 
 import { BrowserPushService } from "./browser-push.service";
 import type { BrowserPushJobPayload } from "./browser-push.types";
+import { withPushAnalyticsAttribution } from "./push-analytics-url";
+
+test("push analytics attribution uses GA4's canonical mobile-push parameters", () => {
+  const tracked = new URL(withPushAnalyticsAttribution(
+    "https://www.exotic-tz.net/escort/mbeya-sensual-massage/?locale=sw#gallery",
+    { campaignId: "campaign-123" },
+  ));
+
+  assert.equal(tracked.searchParams.get("locale"), "sw");
+  assert.equal(tracked.searchParams.get("utm_source"), "push_engine");
+  assert.equal(tracked.searchParams.get("utm_medium"), "push");
+  assert.equal(tracked.searchParams.get("utm_campaign"), "campaign-123");
+  assert.equal(tracked.hash, "#gallery");
+});
+
+test("push analytics attribution replaces stale EPE UTM values", () => {
+  const tracked = new URL(withPushAnalyticsAttribution(
+    "https://example.com/profile?utm_source=old&utm_medium=email&utm_campaign=old-campaign",
+    { campaignId: "campaign-456" },
+  ));
+
+  assert.equal(tracked.searchParams.get("utm_source"), "push_engine");
+  assert.equal(tracked.searchParams.get("utm_medium"), "push");
+  assert.equal(tracked.searchParams.get("utm_campaign"), "campaign-456");
+});
 
 test("browser push service enqueues a dispatch job", async () => {
   const fakeSitesService = {
@@ -42,6 +67,36 @@ test("browser push service enqueues a dispatch job", async () => {
   assert.equal(result.queued, true);
   assert.equal(result.jobId, "job-1");
   assert.deepEqual(queueOptions, { jobId: "crm-stable-job" });
+});
+
+test("browser push service applies GA4 attribution to campaign and variant URLs", async () => {
+  const payloads: BrowserPushJobPayload[] = [];
+  const queue = {
+    async add(_name: string, payload: BrowserPushJobPayload) {
+      payloads.push(payload);
+      return { id: "job-1" };
+    },
+  };
+  const service = new BrowserPushService({
+    async getSite() {
+      return { id: "site-1", vapidSubject: "mailto:push@example.com", vapidPublicKey: "public-key", vapidPrivateKey: "private-key" };
+    },
+  } as never, {} as never, { async log() { return undefined; } } as never, queue as never);
+
+  await service.dispatch({
+    siteId: "site-1",
+    campaignId: "campaign-789",
+    title: "Control",
+    body: "Body",
+    url: "https://example.com/control?locale=en",
+    variants: [{ id: "variant-a", title: "Variant", body: "Variant body", url: "https://example.com/variant", weight: 100 }],
+  });
+
+  const payload = payloads[0]!;
+  assert.equal(new URL(payload.notification.url).searchParams.get("utm_campaign"), "campaign-789");
+  assert.equal(new URL(payload.notification.url).searchParams.get("locale"), "en");
+  assert.equal(new URL(payload.variants![0]!.url).searchParams.get("utm_campaign"), "campaign-789");
+  assert.equal(new URL(payload.variants![0]!.url).searchParams.get("utm_medium"), "push");
 });
 
 test("browser push service fills the icon slot from the image when no icon is given", async () => {

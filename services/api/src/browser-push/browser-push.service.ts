@@ -7,6 +7,7 @@ import { BrowserPushRepository } from "./browser-push.repository";
 import { BROWSER_PUSH_JOB_NAME, BROWSER_PUSH_QUEUE_NAME } from "./browser-push.constants";
 import type { BrowserPushJobPayload } from "./browser-push.types";
 import { CreateBrowserPushDispatchDto } from "./dto/create-browser-push-dispatch.dto";
+import { withPushAnalyticsAttribution } from "./push-analytics-url";
 
 export const BROWSER_PUSH_QUEUE = Symbol("BROWSER_PUSH_QUEUE");
 
@@ -53,7 +54,7 @@ export class BrowserPushService {
       notification: {
         title: dto.title,
         body: dto.body,
-        url: dto.url,
+        url: withPushAnalyticsAttribution(dto.url, dto),
         // The icon slot is the notification's visual identity in every
         // browser (the large `image` only renders on some platforms), and
         // senders -- campaigns, automations, the REST API -- often provide
@@ -66,8 +67,13 @@ export class BrowserPushService {
       enqueuedAt: new Date().toISOString(),
     };
 
+    payload.variants = (payload.variants ?? []).map((variant) => ({
+      ...variant,
+      url: withPushAnalyticsAttribution(variant.url, dto),
+    }));
+
     const job = await this.queue.add(
-      BROWSER_PUSH_JOB_NAME,
+      BROWSER_PUSH_JOB_NAME, 
       payload,
       "jobId" in dto && dto.jobId ? { jobId: dto.jobId } : undefined,
     );
