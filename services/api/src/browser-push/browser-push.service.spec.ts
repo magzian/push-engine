@@ -18,15 +18,20 @@ test("push analytics attribution uses GA4's canonical mobile-push parameters", (
   assert.equal(tracked.hash, "#gallery");
 });
 
-test("push analytics attribution replaces stale EPE UTM values", () => {
+test("push analytics attribution preserves caller-provided UTM values", () => {
   const tracked = new URL(withPushAnalyticsAttribution(
     "https://example.com/profile?utm_source=old&utm_medium=email&utm_campaign=old-campaign",
     { campaignId: "campaign-456" },
   ));
 
-  assert.equal(tracked.searchParams.get("utm_source"), "push_engine");
-  assert.equal(tracked.searchParams.get("utm_medium"), "push");
-  assert.equal(tracked.searchParams.get("utm_campaign"), "campaign-456");
+  assert.equal(tracked.searchParams.get("utm_source"), "old");
+  assert.equal(tracked.searchParams.get("utm_medium"), "email");
+  assert.equal(tracked.searchParams.get("utm_campaign"), "old-campaign");
+});
+
+test("push analytics attribution leaves relative and malformed URLs unchanged", () => {
+  assert.equal(withPushAnalyticsAttribution("/offers", { campaignId: "campaign-123" }), "/offers");
+  assert.equal(withPushAnalyticsAttribution("not a URL", { campaignId: "campaign-123" }), "not a URL");
 });
 
 test("browser push service enqueues a dispatch job", async () => {

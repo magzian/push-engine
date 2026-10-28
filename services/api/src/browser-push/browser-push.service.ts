@@ -67,13 +67,15 @@ export class BrowserPushService {
       enqueuedAt: new Date().toISOString(),
     };
 
-    payload.variants = (payload.variants ?? []).map((variant) => ({
-      ...variant,
-      url: withPushAnalyticsAttribution(variant.url, dto),
-    }));
+    if (payload.variants) {
+      payload.variants = payload.variants.map((variant) => ({
+        ...variant,
+        url: withPushAnalyticsAttribution(variant.url, dto),
+      }));
+    }
 
     const job = await this.queue.add(
-      BROWSER_PUSH_JOB_NAME, 
+      BROWSER_PUSH_JOB_NAME,
       payload,
       "jobId" in dto && dto.jobId ? { jobId: dto.jobId } : undefined,
     );
