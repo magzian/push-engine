@@ -1,6 +1,7 @@
 import { Controller, Get, NotFoundException, Param, Query, Inject } from "@nestjs/common";
 import type { Pool } from "pg";
 
+import { withPushAnalyticsAttribution } from "../browser-push/push-analytics-url";
 import { DATABASE_POOL } from "../database/database.constants";
 import type { SitePublicConfigRecord } from "./sites.types";
 import { SitesService } from "./sites.service";
@@ -103,7 +104,10 @@ export class PublicSitesController {
         id: campaign.id,
         title: campaign.title,
         message: campaign.message,
-        url: campaign.url,
+        // The bell tray is another push entry point. Return the same tracked
+        // destination as the browser notification so clicks remain attributable
+        // in GA4 regardless of where the subscriber opens the campaign.
+        url: withPushAnalyticsAttribution(campaign.url, { campaignId: campaign.id }),
         iconUrl: campaign.icon_url,
         sentAt: campaign.sent_at,
       })),
