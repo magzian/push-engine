@@ -142,4 +142,8 @@ test("public sites controller returns recent notifications for active sites", as
   assert.equal(response.success, true);
   assert.equal(response.data.length, 1);
   assert.equal(response.data[0]?.title, "Weekend update");
+  const destination = new URL(response.data[0]!.url);
+  assert.equal(destination.searchParams.get("utm_source"), "push_engine");
+  assert.equal(destination.searchParams.get("utm_medium"), "push");
+  assert.equal(destination.searchParams.get("utm_campaign"), "campaign-1");
 });
