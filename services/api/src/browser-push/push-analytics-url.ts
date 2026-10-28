@@ -29,8 +29,8 @@ export function withPushAnalyticsAttribution(
 
   const campaign = attribution.campaignId
     ?? (attribution.automationId ? `automation-${attribution.automationId}` : null);
-  if (campaign && !url.searchParams.has("utm_campaign")) {
-    url.searchParams.set("utm_campaign", campaign);
+  if (campaign && !url.searchParams.has("utm_id")) {
+    url.searchParams.set("utm_id", campaign);
   }
 
   return url.toString();

@@ -145,5 +145,5 @@ test("public sites controller returns recent notifications for active sites", as
   const destination = new URL(response.data[0]!.url);
   assert.equal(destination.searchParams.get("utm_source"), "push_engine");
   assert.equal(destination.searchParams.get("utm_medium"), "push");
-  assert.equal(destination.searchParams.get("utm_campaign"), "campaign-1");
+  assert.equal(destination.searchParams.get("utm_id"), "campaign-1");
 });
