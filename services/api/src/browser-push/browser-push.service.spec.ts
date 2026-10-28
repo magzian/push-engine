@@ -14,19 +14,19 @@ test("push analytics attribution uses GA4's canonical mobile-push parameters", (
   assert.equal(tracked.searchParams.get("locale"), "sw");
   assert.equal(tracked.searchParams.get("utm_source"), "push_engine");
   assert.equal(tracked.searchParams.get("utm_medium"), "push");
-  assert.equal(tracked.searchParams.get("utm_campaign"), "campaign-123");
+  assert.equal(tracked.searchParams.get("utm_id"), "campaign-123");
   assert.equal(tracked.hash, "#gallery");
 });
 
 test("push analytics attribution preserves caller-provided UTM values", () => {
   const tracked = new URL(withPushAnalyticsAttribution(
-    "https://example.com/profile?utm_source=old&utm_medium=email&utm_campaign=old-campaign",
+    "https://example.com/profile?utm_source=old&utm_medium=email&utm_id=old-campaign",
     { campaignId: "campaign-456" },
   ));
 
   assert.equal(tracked.searchParams.get("utm_source"), "old");
   assert.equal(tracked.searchParams.get("utm_medium"), "email");
-  assert.equal(tracked.searchParams.get("utm_campaign"), "old-campaign");
+  assert.equal(tracked.searchParams.get("utm_id"), "old-campaign");
 });
 
 test("push analytics attribution leaves relative and malformed URLs unchanged", () => {
@@ -98,9 +98,9 @@ test("browser push service applies GA4 attribution to campaign and variant URLs"
   });
 
   const payload = payloads[0]!;
-  assert.equal(new URL(payload.notification.url).searchParams.get("utm_campaign"), "campaign-789");
+  assert.equal(new URL(payload.notification.url).searchParams.get("utm_id"), "campaign-789");
   assert.equal(new URL(payload.notification.url).searchParams.get("locale"), "en");
-  assert.equal(new URL(payload.variants![0]!.url).searchParams.get("utm_campaign"), "campaign-789");
+  assert.equal(new URL(payload.variants![0]!.url).searchParams.get("utm_id"), "campaign-789");
   assert.equal(new URL(payload.variants![0]!.url).searchParams.get("utm_medium"), "push");
 });
 
