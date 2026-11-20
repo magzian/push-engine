@@ -10,8 +10,8 @@ export class AnalyticsService {
   constructor(private readonly analyticsRepository: AnalyticsRepository, private readonly ga4DataClient?: Ga4DataClient) {}
 
   async getGa4CampaignLandingPerformance(input: { siteId?: string; campaignId?: string; startDate: string; endDate: string }) {
-    if (!input.siteId || !input.campaignId) {
-      return { status: "not_configured" as const, totalUsers: 0, newUsers: 0, returningUsers: 0, sessions: 0, engagedSessions: 0, keyEvents: 0, message: "Choose one site and one campaign to view GA4 landing data." };
+    if (!input.siteId) {
+      return { status: "not_configured" as const, totalUsers: 0, newUsers: 0, returningUsers: 0, sessions: 0, engagedSessions: 0, keyEvents: 0, message: "Choose one site to view GA4 landing data." };
     }
     const siteUrl = await this.analyticsRepository.getSiteUrl(input.siteId);
     if (!siteUrl) {
@@ -20,7 +20,7 @@ export class AnalyticsService {
     if (!this.ga4DataClient) {
       return { status: "not_configured" as const, totalUsers: 0, newUsers: 0, returningUsers: 0, sessions: 0, engagedSessions: 0, keyEvents: 0, message: "GA4 reporting is not configured for this site." };
     }
-    return this.ga4DataClient.getCampaignLandingPerformance({ siteUrl, campaignId: input.campaignId, startDate: input.startDate, endDate: input.endDate });
+    return this.ga4DataClient.getCampaignLandingPerformance({ siteUrl, ...(input.campaignId ? { campaignId: input.campaignId } : {}), startDate: input.startDate, endDate: input.endDate });
   }
 
   async getCampaignStats(campaignId: string) {

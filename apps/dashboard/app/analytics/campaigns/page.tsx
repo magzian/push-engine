@@ -165,7 +165,7 @@ export default async function CampaignPerformancePage({
         <div className="panel-heading">
           <div>
             <p className="eyebrow">GA4 landing performance</p>
-            <h3>{selectedCampaign ? "Visitors who reached the campaign URL" : "Choose one campaign to view landing data"}</h3>
+            <h3>{selectedCampaign ? "Visitors who reached the campaign URL" : "Visitors who reached any Push Engine campaign URL"}</h3>
           </div>
           <span className={`badge ${ga4Landing.status === "available" ? "active" : "muted"}`}>
             {ga4Landing.status === "available" ? "GA4 connected" : "GA4 unavailable"}
@@ -187,7 +187,7 @@ export default async function CampaignPerformancePage({
           <p className="subtle" style={{ padding: "8px 0 0" }}>{ga4Landing.message}</p>
         )}
         <p className="subtle" style={{ marginTop: 14 }}>
-          Matched in GA4 by session source / medium <strong>push_engine / push</strong> and this campaign&apos;s <strong>utm_id</strong>. GA4 may lag behind delivery and click data.
+          Matched in GA4 by session source / medium <strong>push_engine / push</strong>{selectedCampaign ? <> and this campaign&apos;s <strong>utm_id</strong></> : " across all Push Engine campaigns"}. GA4 may lag behind delivery and click data.
         </p>
       </section>
     </DashboardShell>
