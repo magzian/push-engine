@@ -102,6 +102,27 @@ export class AnalyticsController {
     return { success: true, data: stats };
   }
 
+  @Get("ga4-campaign-performance")
+  async getGa4CampaignLandingPerformance(
+    @Query("siteId") siteId?: string,
+    @Query("campaignId") campaignId?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+  ): Promise<{ success: true; data: unknown }> {
+    const range = parseDateRangeQuery(startDate, endDate);
+    const end = range?.endDate ?? new Date().toISOString().slice(0, 10);
+    const start = range?.startDate ?? end;
+    return {
+      success: true,
+      data: await this.analyticsService.getGa4CampaignLandingPerformance({
+        ...(siteId ? { siteId } : {}),
+        ...(campaignId ? { campaignId } : {}),
+        startDate: start,
+        endDate: end,
+      }),
+    };
+  }
+
   // Bulk variant of campaigns/:campaignId so list pages can hydrate a whole
   // page of rows with one request. `ids` is a comma-separated list.
   @Get("campaigns")

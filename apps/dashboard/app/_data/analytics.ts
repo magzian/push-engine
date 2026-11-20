@@ -114,6 +114,17 @@ export interface CampaignPerformanceStats {
   clickThroughRate: number;
 }
 
+export interface Ga4CampaignLandingPerformance {
+  status: "available" | "not_configured" | "unavailable";
+  totalUsers: number;
+  newUsers: number;
+  returningUsers: number;
+  sessions: number;
+  engagedSessions: number;
+  keyEvents: number;
+  message?: string;
+}
+
 export interface ContentPerformanceSummary {
   contentType: string;
   totalCampaigns: number;
@@ -494,4 +505,16 @@ export async function getCampaignPerformancePage(
 
   const response = await apiJson<{ success: true; data: CampaignPerformanceStats }>(`/analytics/campaign-performance?${search.toString()}`);
   return response?.data ?? null;
+}
+
+export async function getGa4CampaignLandingPerformancePage(
+  range: AnalyticsDateRange,
+  siteId?: string,
+  campaignId?: string,
+): Promise<Ga4CampaignLandingPerformance> {
+  const search = new URLSearchParams({ startDate: range.startDate, endDate: range.endDate });
+  if (siteId) search.set("siteId", siteId);
+  if (campaignId) search.set("campaignId", campaignId);
+  const response = await apiJson<{ success: true; data: Ga4CampaignLandingPerformance }>(`/analytics/ga4-campaign-performance?${search.toString()}`);
+  return response?.data ?? { status: "unavailable", totalUsers: 0, newUsers: 0, returningUsers: 0, sessions: 0, engagedSessions: 0, keyEvents: 0, message: "GA4 landing data is temporarily unavailable." };
 }
