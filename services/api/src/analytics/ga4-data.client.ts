@@ -32,20 +32,21 @@ function base64Url(value: string | Buffer): string {
 
 @Injectable()
 export class Ga4DataClient {
-  async getCampaignLandingPerformance(input: { siteUrl: string; campaignId: string; startDate: string; endDate: string }): Promise<Ga4CampaignLandingPerformance> {
+  async getCampaignLandingPerformance(input: { siteUrl: string; campaignId?: string; startDate: string; endDate: string }): Promise<Ga4CampaignLandingPerformance> {
     const config = loadGa4ServiceAccountConfig();
     const propertyId = findGa4PropertyId(input.siteUrl, config);
     if (!config || !propertyId) return empty("not_configured", "GA4 reporting is not configured for this site.");
 
     try {
       const accessToken = await this.getAccessToken(config.clientEmail, config.privateKey);
+      const expressions = [
+        { filter: { fieldName: "sessionSourceMedium", stringFilter: { matchType: "EXACT", value: "push_engine / push" } } },
+        ...(input.campaignId
+          ? [{ filter: { fieldName: "sessionCampaignId", stringFilter: { matchType: "EXACT", value: input.campaignId } } }]
+          : []),
+      ];
       const filter = {
-        andGroup: {
-          expressions: [
-            { filter: { fieldName: "sessionSourceMedium", stringFilter: { matchType: "EXACT", value: "push_engine / push" } } },
-            { filter: { fieldName: "sessionCampaignId", stringFilter: { matchType: "EXACT", value: input.campaignId } } },
-          ],
-        },
+        andGroup: { expressions },
       };
       const [overallResponse, visitorTypeResponse] = await Promise.all([
         this.runReport(accessToken, propertyId, {
