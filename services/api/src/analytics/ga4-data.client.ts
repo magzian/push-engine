@@ -39,31 +39,53 @@ export class Ga4DataClient {
 
     try {
       const accessToken = await this.getAccessToken(config.clientEmail, config.privateKey);
-      const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
-        body: JSON.stringify({
+      const filter = {
+        andGroup: {
+          expressions: [
+            { filter: { fieldName: "sessionSourceMedium", stringFilter: { matchType: "EXACT", value: "push_engine / push" } } },
+            { filter: { fieldName: "sessionCampaignId", stringFilter: { matchType: "EXACT", value: input.campaignId } } },
+          ],
+        },
+      };
+      const [overallResponse, visitorTypeResponse] = await Promise.all([
+        this.runReport(accessToken, propertyId, {
           dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
-          dimensions: [{ name: "sessionSourceMedium" }, { name: "sessionCampaignId" }],
-          metrics: ["totalUsers", "newUsers", "returningUsers", "sessions", "engagedSessions", "keyEvents"].map((name) => ({ name })),
-          dimensionFilter: {
-            andGroup: {
-              expressions: [
-                { filter: { fieldName: "sessionSourceMedium", stringFilter: { matchType: "EXACT", value: "push_engine / push" } } },
-                { filter: { fieldName: "sessionCampaignId", stringFilter: { matchType: "EXACT", value: input.campaignId } } },
-              ],
-            },
-          },
+          metrics: ["totalUsers", "sessions", "engagedSessions", "keyEvents"].map((name) => ({ name })),
+          dimensionFilter: filter,
         }),
-      });
-      if (!response.ok) return empty("unavailable", "GA4 could not return this campaign's landing data yet.");
+        this.runReport(accessToken, propertyId, {
+          dateRanges: [{ startDate: input.startDate, endDate: input.endDate }],
+          dimensions: [{ name: "newVsReturning" }],
+          metrics: [{ name: "totalUsers" }],
+          dimensionFilter: filter,
+        }),
+      ]);
+      if (!overallResponse.ok || !visitorTypeResponse.ok) return empty("unavailable", "GA4 could not return this campaign's landing data yet.");
 
-      const payload = await response.json() as { rows?: Array<{ metricValues?: Array<{ value?: string }> }> };
-      const values = payload.rows?.[0]?.metricValues?.map((value) => Number(value.value ?? 0)) ?? [];
-      return { status: "available", totalUsers: values[0] ?? 0, newUsers: values[1] ?? 0, returningUsers: values[2] ?? 0, sessions: values[3] ?? 0, engagedSessions: values[4] ?? 0, keyEvents: values[5] ?? 0 };
+      const overall = await overallResponse.json() as { rows?: Array<{ metricValues?: Array<{ value?: string }> }> };
+      const visitorTypes = await visitorTypeResponse.json() as { rows?: Array<{ dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }> };
+      const values = overall.rows?.[0]?.metricValues?.map((value) => Number(value.value ?? 0)) ?? [];
+      const classifiedUsers = new Map(visitorTypes.rows?.map((row) => [row.dimensionValues?.[0]?.value, Number(row.metricValues?.[0]?.value ?? 0)]) ?? []);
+      return {
+        status: "available",
+        totalUsers: values[0] ?? 0,
+        newUsers: classifiedUsers.get("new") ?? 0,
+        returningUsers: classifiedUsers.get("returning") ?? 0,
+        sessions: values[1] ?? 0,
+        engagedSessions: values[2] ?? 0,
+        keyEvents: values[3] ?? 0,
+      };
     } catch {
       return empty("unavailable", "GA4 could not return this campaign's landing data yet.");
     }
+  }
+
+  private async runReport(accessToken: string, propertyId: string, body: unknown): Promise<Response> {
+    return fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
   }
 
   private async getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
