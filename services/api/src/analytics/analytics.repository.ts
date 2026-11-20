@@ -163,6 +163,11 @@ function endOfDayUtcPlus3Exclusive(dateInput: string): string {
 export class AnalyticsRepository {
   constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
+  async getSiteUrl(siteId: string): Promise<string | null> {
+    const { rows } = await this.pool.query<{ url: string }>("SELECT url FROM sites WHERE id = $1", [siteId]);
+    return rows[0]?.url ?? null;
+  }
+
   // Builds the WHERE-clause fragment used by every report that bounds rows by
   // a date range. `params` is mutated (the two date-bound values are pushed
   // on) so the returned $N placeholders line up; days-only callers are

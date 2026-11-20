@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DashboardShell } from "../../_components/dashboard-shell";
 import { FilterSelect } from "../../_components/list-controls";
 import { getCampaignList } from "../../_data/campaigns";
-import { getCampaignPerformancePage, resolveAnalyticsRange } from "../../_data/analytics";
+import { getCampaignPerformancePage, getGa4CampaignLandingPerformancePage, resolveAnalyticsRange } from "../../_data/analytics";
 import { getSiteChoices } from "../../_data/sites";
 import { AnalyticsComparisonCard } from "../analytics-comparison-card";
 import { AnalyticsRangePicker } from "../analytics-range-picker";
@@ -36,11 +36,12 @@ export default async function CampaignPerformancePage({
 
   // Campaigns list is scoped to the selected site so the picker only shows
   // campaigns that actually belong to the current filter context.
-  const [stats, comparisonStats, sites, campaignsPayload] = await Promise.all([
+  const [stats, comparisonStats, sites, campaignsPayload, ga4Landing] = await Promise.all([
     getCampaignPerformancePage(range, query.siteId, query.campaignId),
     comparisonRange ? getCampaignPerformancePage(comparisonRange, query.siteId, query.campaignId) : Promise.resolve(null),
     getSiteChoices(),
     getCampaignList({ siteId: query.siteId }),
+    getGa4CampaignLandingPerformancePage(range, query.siteId, query.campaignId),
   ]);
 
   const realSites = sites.filter((site) => site.id !== "site-3");
@@ -158,6 +159,33 @@ export default async function CampaignPerformancePage({
             No push deliveries found for this filter in the selected period.
           </p>
         )}
+      </section>
+
+      <section className="card analytics-panel" style={{ marginTop: 18 }}>
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">GA4 landing performance</p>
+            <h3>{selectedCampaign ? "Visitors who reached the campaign URL" : "Choose one campaign to view landing data"}</h3>
+          </div>
+          <span className={`badge ${ga4Landing.status === "available" ? "active" : "muted"}`}>
+            {ga4Landing.status === "available" ? "GA4 connected" : "GA4 unavailable"}
+          </span>
+        </div>
+        {ga4Landing.status === "available" ? (
+          <div className="analytics-mini-summary">
+            <article className="analytics-mini-card"><span>Tracked landing visitors</span><strong>{formatNumber(ga4Landing.totalUsers)}</strong></article>
+            <article className="analytics-mini-card"><span>New visitors</span><strong>{formatNumber(ga4Landing.newUsers)}</strong></article>
+            <article className="analytics-mini-card"><span>Returning visitors</span><strong>{formatNumber(ga4Landing.returningUsers)}</strong></article>
+            <article className="analytics-mini-card"><span>Sessions</span><strong>{formatNumber(ga4Landing.sessions)}</strong></article>
+            <article className="analytics-mini-card"><span>Engaged sessions</span><strong>{formatNumber(ga4Landing.engagedSessions)}</strong></article>
+            <article className="analytics-mini-card"><span>Key events</span><strong>{formatNumber(ga4Landing.keyEvents)}</strong></article>
+          </div>
+        ) : (
+          <p className="subtle" style={{ padding: "8px 0 0" }}>{ga4Landing.message}</p>
+        )}
+        <p className="subtle" style={{ marginTop: 14 }}>
+          Matched in GA4 by session source / medium <strong>push_engine / push</strong> and this campaign&apos;s <strong>utm_id</strong>. GA4 may lag behind delivery and click data.
+        </p>
       </section>
     </DashboardShell>
   );
