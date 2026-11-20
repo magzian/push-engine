@@ -172,14 +172,17 @@ export default async function CampaignPerformancePage({
           </span>
         </div>
         {ga4Landing.status === "available" ? (
-          <div className="analytics-mini-summary">
-            <article className="analytics-mini-card"><span>Tracked landing visitors</span><strong>{formatNumber(ga4Landing.totalUsers)}</strong></article>
-            <article className="analytics-mini-card"><span>New visitors</span><strong>{formatNumber(ga4Landing.newUsers)}</strong></article>
-            <article className="analytics-mini-card"><span>Returning visitors</span><strong>{formatNumber(ga4Landing.returningUsers)}</strong></article>
-            <article className="analytics-mini-card"><span>Sessions</span><strong>{formatNumber(ga4Landing.sessions)}</strong></article>
-            <article className="analytics-mini-card"><span>Engaged sessions</span><strong>{formatNumber(ga4Landing.engagedSessions)}</strong></article>
-            <article className="analytics-mini-card"><span>Key events</span><strong>{formatNumber(ga4Landing.keyEvents)}</strong></article>
-          </div>
+          <>
+            <div className="analytics-mini-summary">
+              <article className="analytics-mini-card"><span>Tracked landing visitors</span><strong>{formatNumber(ga4Landing.totalUsers)}</strong></article>
+              <article className="analytics-mini-card"><span>New visitors</span><strong>{formatNumber(ga4Landing.newUsers)}</strong></article>
+              <article className="analytics-mini-card"><span>Returning visitors</span><strong>{formatNumber(ga4Landing.returningUsers)}</strong></article>
+              <article className="analytics-mini-card"><span>Sessions</span><strong>{formatNumber(ga4Landing.sessions)}</strong></article>
+              <article className="analytics-mini-card"><span>Engaged sessions</span><strong>{formatNumber(ga4Landing.engagedSessions)}</strong></article>
+              <article className="analytics-mini-card"><span>Key events</span><strong>{formatNumber(ga4Landing.keyEvents)}</strong></article>
+            </div>
+            <p className="subtle" style={{ marginTop: 12 }}>GA4 classifies new and returning visitors by session; those figures are not necessarily additive.</p>
+          </>
         ) : (
           <p className="subtle" style={{ padding: "8px 0 0" }}>{ga4Landing.message}</p>
         )}
