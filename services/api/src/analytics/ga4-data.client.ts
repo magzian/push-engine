@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { Injectable } from "@nestjs/common";
 
 import { findGa4PropertyId, loadGa4ServiceAccountConfig } from "./ga4-data.config";
+import { Ga4ConnectionsService } from "./ga4-connections.service";
 
 export interface Ga4CampaignLandingPerformance {
   status: "available" | "not_configured" | "unavailable";
@@ -32,9 +33,11 @@ function base64Url(value: string | Buffer): string {
 
 @Injectable()
 export class Ga4DataClient {
+  constructor(private readonly ga4ConnectionsService: Ga4ConnectionsService) {}
+
   async getCampaignLandingPerformance(input: { siteUrl: string; campaignId?: string; startDate: string; endDate: string }): Promise<Ga4CampaignLandingPerformance> {
     const config = loadGa4ServiceAccountConfig();
-    const propertyId = findGa4PropertyId(input.siteUrl, config);
+    const propertyId = await this.ga4ConnectionsService.findPropertyId(input.siteUrl) ?? findGa4PropertyId(input.siteUrl, config);
     if (!config || !propertyId) return empty("not_configured", "GA4 reporting is not configured for this site.");
 
     try {

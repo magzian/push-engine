@@ -6,6 +6,10 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { AnalyticsService } from "./analytics.service";
+import { Ga4ConnectionsService } from "./ga4-connections.service";
+import { UpsertGa4ConnectionDto } from "./dto/upsert-ga4-connection.dto";
+import type { AuthenticatedUser } from "../auth/auth.types";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { ListFailedDeliveriesQueryDto } from "./dto/list-failed-deliveries-query.dto";
 import { GoogleSheetsClient } from "./google-sheets.client";
 import { isGoogleSheetsExportConfigured } from "./google-sheets.config";
@@ -72,7 +76,23 @@ export class AnalyticsController {
   constructor(
     private readonly analyticsService: AnalyticsService,
     private readonly googleSheetsClient: GoogleSheetsClient,
+    private readonly ga4ConnectionsService?: Ga4ConnectionsService,
   ) {}
+
+  @Get("ga4-connections")
+  @Roles("super-admin")
+  async listGa4Connections(): Promise<{ success: true; data: unknown }> {
+    return { success: true, data: await this.ga4ConnectionsService?.list() ?? [] };
+  }
+
+  @Post("ga4-connections")
+  @Roles("super-admin")
+  async saveGa4Connection(@Body() dto: UpsertGa4ConnectionDto, @CurrentUser() user: AuthenticatedUser): Promise<{ success: true; data: unknown }> {
+    if (!this.ga4ConnectionsService) {
+      throw new BadRequestException("GA4 connections are unavailable");
+    }
+    return { success: true, data: await this.ga4ConnectionsService.upsert(dto, user.id) };
+  }
 
   @Get("overview")
   async getOverview(

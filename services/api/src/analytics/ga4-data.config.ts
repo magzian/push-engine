@@ -9,7 +9,7 @@ interface Ga4ServiceAccountConfig {
   properties: Ga4PropertyMapping[];
 }
 
-function normalizeOrigin(value: string): string | null {
+export function normalizeGa4Origin(value: string): string | null {
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
@@ -28,7 +28,7 @@ export function loadGa4ServiceAccountConfig(): Ga4ServiceAccountConfig | null {
   try {
     const parsed = JSON.parse(rawMappings) as Array<{ siteOrigin?: unknown; propertyId?: unknown }>;
     const properties = parsed.flatMap((item) => {
-      const siteOrigin = typeof item.siteOrigin === "string" ? normalizeOrigin(item.siteOrigin) : null;
+      const siteOrigin = typeof item.siteOrigin === "string" ? normalizeGa4Origin(item.siteOrigin) : null;
       const propertyId = typeof item.propertyId === "string" ? item.propertyId.trim() : "";
       return siteOrigin && /^\d+$/.test(propertyId) ? [{ siteOrigin, propertyId }] : [];
     });
@@ -39,7 +39,7 @@ export function loadGa4ServiceAccountConfig(): Ga4ServiceAccountConfig | null {
 }
 
 export function findGa4PropertyId(siteUrl: string, config = loadGa4ServiceAccountConfig()): string | null {
-  const origin = normalizeOrigin(siteUrl);
+  const origin = normalizeGa4Origin(siteUrl);
   if (!origin || !config) return null;
   return config.properties.find((property) => property.siteOrigin === origin)?.propertyId ?? null;
 }
