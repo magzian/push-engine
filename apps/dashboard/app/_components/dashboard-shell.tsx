@@ -47,6 +47,7 @@ export const dashboardNavigationSections: DashboardNavSection[] = [
     label: "System",
     items: [
       { href: "/access-control", label: "Users & Roles", description: "Manage who can access what", icon: "auth" },
+      { href: "/ga4-connections", label: "GA4 Connections", description: "Connect sites to GA4 reporting", icon: "analytics" },
       { href: "/media-library", label: "Media Library", description: "Every image and icon uploaded across all sites", icon: "media" },
       { href: "/audit-logs", label: "Activity Log", description: "See who did what, and when", icon: "platform" },
       { href: "/platform-health", label: "System Health", description: "Check that everything is running smoothly", icon: "health" },
