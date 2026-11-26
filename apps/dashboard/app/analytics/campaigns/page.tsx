@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { DashboardShell } from "../../_components/dashboard-shell";
 import { FilterSelect } from "../../_components/list-controls";
+import { MetricInfo } from "../../_components/metric-info";
 import { getCampaignList } from "../../_data/campaigns";
 import { getCampaignPerformancePage, getGa4CampaignLandingPerformancePage, resolveAnalyticsRange } from "../../_data/analytics";
 import { getSiteChoices } from "../../_data/sites";
@@ -174,12 +175,30 @@ export default async function CampaignPerformancePage({
         {ga4Landing.status === "available" ? (
           <>
             <div className="analytics-mini-summary">
-              <article className="analytics-mini-card"><span>Tracked landing visitors</span><strong>{formatNumber(ga4Landing.totalUsers)}</strong></article>
-              <article className="analytics-mini-card"><span>New visitors</span><strong>{formatNumber(ga4Landing.newUsers)}</strong></article>
-              <article className="analytics-mini-card"><span>Returning visitors</span><strong>{formatNumber(ga4Landing.returningUsers)}</strong></article>
-              <article className="analytics-mini-card"><span>Sessions</span><strong>{formatNumber(ga4Landing.sessions)}</strong></article>
-              <article className="analytics-mini-card"><span>Engaged sessions</span><strong>{formatNumber(ga4Landing.engagedSessions)}</strong></article>
-              <article className="analytics-mini-card"><span>Key events</span><strong>{formatNumber(ga4Landing.keyEvents)}</strong></article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>Tracked landing visitors</span><MetricInfo label="Tracked landing visitors" description="Unique people GA4 recorded after they landed through a Push Engine URL in this reporting period." /></div>
+                <strong>{formatNumber(ga4Landing.totalUsers)}</strong>
+              </article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>New visitors</span><MetricInfo label="New visitors" description="Visitors GA4 classified as new during a push-attributed session in this reporting period." /></div>
+                <strong>{formatNumber(ga4Landing.newUsers)}</strong>
+              </article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>Returning visitors</span><MetricInfo label="Returning visitors" description="Visitors GA4 classified as returning during a push-attributed session in this reporting period." /></div>
+                <strong>{formatNumber(ga4Landing.returningUsers)}</strong>
+              </article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>Sessions</span><MetricInfo label="Sessions" description="Visits to the site that began from a Push Engine campaign URL. One visitor can create more than one session." /></div>
+                <strong>{formatNumber(ga4Landing.sessions)}</strong>
+              </article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>Engaged sessions</span><MetricInfo label="Engaged sessions" description="Push-attributed sessions that met GA4’s engagement threshold, such as lasting longer than 10 seconds, viewing multiple pages, or triggering a key event." /></div>
+                <strong>{formatNumber(ga4Landing.engagedSessions)}</strong>
+              </article>
+              <article className="analytics-mini-card analytics-mini-card--with-info">
+                <div className="analytics-mini-card-heading"><span>Key events</span><MetricInfo label="Key events" description="Events GA4 has been configured to treat as important actions, recorded during push-attributed sessions. One session can contain several key events." /></div>
+                <strong>{formatNumber(ga4Landing.keyEvents)}</strong>
+              </article>
             </div>
             <p className="subtle" style={{ marginTop: 12 }}>GA4 classifies new and returning visitors by session; those figures are not necessarily additive.</p>
           </>
